@@ -2,27 +2,34 @@ import os
 import stripe
 from license import create_license
 
-# Load from environment
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
-STRIPE_PRICE_ID = os.getenv("STRIPE_PRICE_ID", "")
+# Load from environment dynamically inside functions
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY", "")
 SENDGRID_FROM_EMAIL = os.getenv("SENDGRID_FROM_EMAIL", "noreply@clearcut.app")
 
 
 def create_checkout_session(success_url: str, cancel_url: str) -> str:
     """Create a Stripe Checkout session and return the URL."""
-    if not stripe.api_key or not STRIPE_PRICE_ID:
+    api_key = os.getenv("STRIPE_SECRET_KEY", "").strip()
+    price_id = os.getenv("STRIPE_PRICE_ID", "").strip()
+
+    if not api_key or not price_id:
+        print("[ClearCut] Error: Stripe API Key or Price ID is missing.")
         raise ValueError("Stripe not configured")
 
-    session = stripe.checkout.Session.create(
-        payment_method_types=["card"],
-        line_items=[{"price": STRIPE_PRICE_ID, "quantity": 1}],
-        mode="payment",
-        success_url=success_url,
-        cancel_url=cancel_url,
-    )
-    return session.url
+    stripe.api_key = api_key
+
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[{"price": price_id, "quantity": 1}],
+            mode="payment",
+            success_url=success_url,
+            cancel_url=cancel_url,
+        )
+        return session.url
+    except Exception as e:
+        print(f"[ClearCut] Stripe Checkout Error: {e}")
+        raise e
 
 
 def handle_webhook(payload: bytes, sig_header: str) -> dict:
@@ -30,7 +37,10 @@ def handle_webhook(payload: bytes, sig_header: str) -> dict:
     Handle Stripe webhook event.
     Returns {"license_key": str, "email": str} on success.
     """
-    event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
+    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
+    stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "").strip()
+
+    event = stripe.Webhook.construct_event(payload, sig_header, webhook_secret)
 
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
