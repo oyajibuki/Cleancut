@@ -13,8 +13,17 @@ except ImportError:
 
 from database import init_db
 from license import can_use, record_usage, verify_license, create_license
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 sk = os.getenv("STRIPE_SECRET_KEY", "NOT_FOUND")
 print(f"DEBUG APP LOAD - SK: {sk[:10]}...")
