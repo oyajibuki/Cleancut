@@ -531,6 +531,21 @@ async def main():
             </div>
         </div>
 
+        <!-- Success modal -->
+        <div class="modal-overlay" id="successModal">
+            <div class="modal-box">
+                <h2>🎉 Payment Successful!</h2>
+                <p>Thank you for upgrading! Your License Key is below. It has been automatically saved, but please copy and keep it safe.</p>
+                <div style="display: flex; gap: 8px; margin-top: 15px; margin-bottom: 20px;">
+                    <input type="text" id="successLicenseInput" readonly style="flex: 1; font-weight: bold; text-align: center; font-size: 1.1rem; color: #3b82f6; background: #f8fafc; cursor: text;">
+                    <button class="btn btn-primary" id="copyLicenseBtn" style="padding: 10px 16px;">Copy</button>
+                </div>
+                <div class="modal-actions" style="justify-content: center;">
+                    <button class="btn btn-secondary" id="successCloseBtn">Close</button>
+                </div>
+            </div>
+        </div>
+
         <div class="container hidden" id="resultContainer">
             <!-- Original -->
             <div class="box">
@@ -676,6 +691,28 @@ async def main():
             // --- Check for checkout success in URL ---
             const urlParams = new URLSearchParams(window.location.search);
             const checkoutStatus = urlParams.get('checkout');
+            
+            // --- Success modal logic ---
+            const successModal = document.getElementById('successModal');
+            const successLicenseInput = document.getElementById('successLicenseInput');
+            const copyLicenseBtn = document.getElementById('copyLicenseBtn');
+            const successCloseBtn = document.getElementById('successCloseBtn');
+
+            if (copyLicenseBtn) {
+                copyLicenseBtn.addEventListener('click', () => {
+                    successLicenseInput.select();
+                    document.execCommand('copy');
+                    const oldText = copyLicenseBtn.textContent;
+                    copyLicenseBtn.textContent = 'Copied!';
+                    setTimeout(() => { copyLicenseBtn.textContent = oldText; }, 2000);
+                });
+            }
+            if (successCloseBtn) {
+                successCloseBtn.addEventListener('click', () => {
+                    successModal.classList.remove('active');
+                });
+            }
+
             if (checkoutStatus === 'success') {
                 const sessionId = urlParams.get('session_id');
                 if (sessionId) {
@@ -684,8 +721,10 @@ async def main():
                         .then(data => {
                             if (data.license_key) {
                                 saveLicense(data.license_key);
-                                alert(`💳 Payment Successful!\n\nYour License Key is:\n【 ${data.license_key} 】\n\nIt has been automatically saved to your browser and unlimited access is now unlocked!`);
                                 updateUsageUI();
+                                // Show custom modal instead of alert
+                                successLicenseInput.value = data.license_key;
+                                successModal.classList.add('active');
                             } else {
                                 alert("Payment successful, but could not display license key automatically. Please check your email.");
                             }
