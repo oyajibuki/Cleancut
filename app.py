@@ -641,16 +641,25 @@ async def main():
 
             // --- Upgrade button ---
             upgradeBtn.addEventListener('click', async () => {
+                const oldText = upgradeBtn.textContent;
+                upgradeBtn.textContent = "Loading...";
+                upgradeBtn.disabled = true;
+
                 try {
                     const resp = await fetch('/create-checkout', { method: 'POST' });
                     const data = await resp.json();
                     if (data.url) {
                         window.location.href = data.url;
                     } else {
-                        alert('Stripe is not configured yet.');
+                        console.error("Backend error:", data);
+                        alert(`Stripe Checkout Error: ${data.error || 'Unknown error'}`);
                     }
                 } catch(e) {
-                    alert('Stripe is not configured yet.');
+                    console.error("Network error:", e);
+                    alert(`Network or Server Error: ${e.message}`);
+                } finally {
+                    upgradeBtn.textContent = oldText;
+                    upgradeBtn.disabled = false;
                 }
             });
 
@@ -1084,7 +1093,10 @@ async def create_checkout(request: Request):
         )
         return {"url": url}
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        import traceback
+        err_msg = traceback.format_exc()
+        print(f"[ClearCut] create_checkout error: {err_msg}")
+        return JSONResponse(status_code=500, content={"error": str(e), "trace": err_msg})
 
 
 @app.post("/stripe-webhook")
