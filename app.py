@@ -22,8 +22,8 @@ print(f"DEBUG APP LOAD - SK: {sk[:10]}...")
 # Initialize DB on startup
 init_db()
 
-# Pre-load default lightweight model to save memory
-session = new_session("u2netp")
+# Pre-load default model
+session = new_session("isnet-general-use")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -490,8 +490,7 @@ async def main():
         <div class="model-selector">
             <label for="modelSelect">Model:</label>
             <select id="modelSelect">
-                <option value="u2netp" selected>U2NetP (Fast/Light - Default)</option>
-                <option value="isnet-general-use">ISNet (High Quality - Requires Pro Server)</option>
+                <option value="isnet-general-use" selected>ISNet (High Quality)</option>
                 <option value="u2net">U2Net (Standard)</option>
                 <option value="u2net_human_seg">U2Net (Portrait)</option>
                 <option value="silueta">Silueta (Fast)</option>
@@ -1039,9 +1038,9 @@ async def remove_bg(
 
     input_data = await file.read()
 
-    allowed_models = ["u2netp", "isnet-general-use", "u2net", "u2net_human_seg", "silueta"]
+    allowed_models = ["isnet-general-use", "u2net", "u2net_human_seg", "silueta"]
     if model not in allowed_models:
-        model = "u2netp"
+        model = "isnet-general-use"
 
     sess = new_session(model)
     output_data = remove(input_data, session=sess)
