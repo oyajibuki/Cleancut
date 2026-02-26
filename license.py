@@ -32,6 +32,7 @@ def create_license(email: str) -> str:
 
 def verify_license(license_key: str) -> bool:
     """Check if a license key is valid and active."""
+    # 1. Quick check against local DB (exists during active container run)
     conn = get_db()
     row = conn.execute(
         "SELECT * FROM licenses WHERE license_key = ? AND is_active = 1",
@@ -39,16 +40,43 @@ def verify_license(license_key: str) -> bool:
     ).fetchone()
     conn.close()
 
-    if row is None:
-        return False
+    if row is not None:
+        # Check expiry if set
+        if row["expires_at"]:
+            expires = datetime.fromisoformat(row["expires_at"])
+            if datetime.utcnow() > expires:
+                return False
+        return True
 
-    # Check expiry if set
-    if row["expires_at"]:
-        expires = datetime.fromisoformat(row["expires_at"])
-        if datetime.utcnow() > expires:
-            return False
+    # 2. If not in local DB (e.g. Hugging Face container restarted and lost DB)
+    # Ping Stripe to verify if this client_reference_id exists and was paid.
+    import os
+    import stripe
+    stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "").strip()
+    
+    if stripe.api_key:
+        try:
+            # Search for the checkout session that issued this license
+            sessions = stripe.checkout.Session.search(
+                query=f"client_reference_id:'{license_key}'",
+                limit=1
+            )
+            for session in sessions.data:
+                if session.payment_status == "paid":
+                    # Restore the license to local DB for faster future lookups
+                    email = session.customer_details.email if session.customer_details else "recovered@example.com"
+                    try:
+                        conn = get_db()
+                        conn.execute("INSERT OR IGNORE INTO licenses (license_key, email) VALUES (?, ?)", (license_key, email))
+                        conn.commit()
+                        conn.close()
+                    except Exception as db_err:
+                        print(f"[ClearCut] Failed to restore recovered license to DB: {db_err}")
+                    return True
+        except Exception as e:
+            print(f"[ClearCut] Error recovering license from Stripe: {e}")
 
-    return True
+    return False
 
 
 def get_today_usage(ip_address: str) -> int:

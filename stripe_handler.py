@@ -71,7 +71,7 @@ def handle_webhook(payload: bytes, sig_header: str) -> dict:
 
 
 def send_license_email(to_email: str, license_key: str):
-    """Send license key via email. Falls back to console output if SendGrid not configured."""
+    """Send license key via email and a BCC copy to admin. Falls back to console output if SendGrid not configured."""
     if not SENDGRID_API_KEY:
         print(f"[ClearCut] Email not configured. License for {to_email}: {license_key}")
         return
@@ -81,6 +81,8 @@ def send_license_email(to_email: str, license_key: str):
         from sendgrid.helpers.mail import Mail
 
         sg = sendgrid.SendGridAPIClient(api_key=SENDGRID_API_KEY)
+        
+        # 1. Send to Customer
         message = Mail(
             from_email=SENDGRID_FROM_EMAIL,
             to_emails=to_email,
@@ -98,6 +100,20 @@ Simple. Fast. Just works.""",
         )
         sg.send(message)
         print(f"[ClearCut] License email sent to {to_email}")
+        
+        # 2. Send Admin Copy
+        try:
+            admin_msg = Mail(
+                from_email=SENDGRID_FROM_EMAIL,
+                to_emails="oyajibuki@gmail.com",
+                subject="[ADMIN COPY] ClearCut Pro License Issued",
+                plain_text_content=f"A new PRO license was successfully issued.\n\nCustomer Email: {to_email}\nLicense Key: {license_key}\n\n— ClearCut Automatic System",
+            )
+            sg.send(admin_msg)
+            print("[ClearCut] Admin copy sent to oyajibuki@gmail.com")
+        except Exception as admin_err:
+            print(f"[ClearCut] Failed to send admin copy: {admin_err}")
+            
     except Exception as e:
         print(f"[ClearCut] Failed to send email: {e}")
         print(f"[ClearCut] License for {to_email}: {license_key}")
