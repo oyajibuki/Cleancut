@@ -17,6 +17,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
+# Pre-download the rembg model to bake it into the Docker image.
+# This prevents BrokenPipeError/timeouts on Hugging Face startup.
+RUN python -c "from rembg import new_session; new_session('isnet-general-use')"
+
 # Ensure the database directory has proper permissions
 RUN chmod -R 777 .
 
