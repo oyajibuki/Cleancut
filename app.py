@@ -658,8 +658,7 @@ async def main():
                     const resp = await fetch('/create-checkout', { method: 'POST' });
                     const data = await resp.json();
                     if (data.url) {
-                        // Hugging Face embeds apps in an iframe. Stripe Checkout blocks iframes (X-Frame-Options: DENY).
-                        // Opening it in the same frame turns the screen white. We must open it in a new tab.
+                        // Hugging Face embeds apps in an iframe. Stripe Checkout blocks iframes
                         window.open(data.url, '_blank');
                     } else {
                         console.error("Backend error:", data);
@@ -673,6 +672,34 @@ async def main():
                     upgradeBtn.disabled = false;
                 }
             });
+
+            // --- Check for checkout success in URL ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const checkoutStatus = urlParams.get('checkout');
+            if (checkoutStatus === 'success') {
+                const sessionId = urlParams.get('session_id');
+                if (sessionId) {
+                    fetch(`/get-checkout-license?session_id=${sessionId}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.license_key) {
+                                saveLicense(data.license_key);
+                                alert(`💳 Payment Successful!\n\nYour License Key is:\n【 ${data.license_key} 】\n\nIt has been automatically saved to your browser and unlimited access is now unlocked!`);
+                                updateUsageUI();
+                            } else {
+                                alert("Payment successful, but could not display license key automatically. Please check your email.");
+                            }
+                            window.history.replaceState({}, document.title, window.location.pathname);
+                        })
+                        .catch(e => {
+                            console.error("License fetch error", e);
+                            window.history.replaceState({}, document.title, window.location.pathname);
+                        });
+                }
+            } else if (checkoutStatus === 'cancel') {
+                alert("Payment was cancelled.");
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
 
             // --- License modal ---
             licenseLink.addEventListener('click', () => {
@@ -1097,10 +1124,16 @@ async def verify_license_endpoint(request: Request):
 async def create_checkout(request: Request):
     try:
         from stripe_handler import create_checkout_session
+        from license import generate_license
+        
+        # Pre-generate the license key to link it with the session
+        pending_license_key = generate_license()
+        
         base_url = str(request.base_url).rstrip("/")
         url = create_checkout_session(
-            success_url=f"{base_url}/?checkout=success",
+            success_url=f"{base_url}/?checkout=success&session_id={{CHECKOUT_SESSION_ID}}",
             cancel_url=f"{base_url}/?checkout=cancel",
+            client_reference_id=pending_license_key
         )
         return {"url": url}
     except Exception as e:
@@ -1108,6 +1141,22 @@ async def create_checkout(request: Request):
         err_msg = traceback.format_exc()
         print(f"[ClearCut] create_checkout error: {err_msg}")
         return JSONResponse(status_code=500, content={"error": str(e), "trace": err_msg})
+
+
+@app.get("/get-checkout-license")
+async def get_checkout_license(session_id: str):
+    """Retrieve the license key attached to a completed checkout session."""
+    import stripe
+    import os
+    stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "").strip()
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+        if session.payment_status == "paid":
+            return {"license_key": session.client_reference_id}
+        else:
+            return {"error": "Payment not completed"}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @app.post("/stripe-webhook")

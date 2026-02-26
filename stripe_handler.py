@@ -7,7 +7,7 @@ SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY", "")
 SENDGRID_FROM_EMAIL = os.getenv("SENDGRID_FROM_EMAIL", "noreply@clearcut.app")
 
 
-def create_checkout_session(success_url: str, cancel_url: str) -> str:
+def create_checkout_session(success_url: str, cancel_url: str, client_reference_id: str = None) -> str:
     """Create a Stripe Checkout session and return the URL."""
     api_key = os.getenv("STRIPE_SECRET_KEY", "").strip()
     price_id = os.getenv("STRIPE_PRICE_ID", "").strip()
@@ -25,6 +25,7 @@ def create_checkout_session(success_url: str, cancel_url: str) -> str:
             mode="payment",
             success_url=success_url,
             cancel_url=cancel_url,
+            client_reference_id=client_reference_id,
         )
         return session.url
     except Exception as e:
@@ -45,9 +46,20 @@ def handle_webhook(payload: bytes, sig_header: str) -> dict:
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
         email = session.get("customer_email") or session.get("customer_details", {}).get("email", "unknown@example.com")
+        license_key = session.get("client_reference_id")
 
-        # Generate license
-        license_key = create_license(email)
+        if license_key:
+            from database import get_db
+            try:
+                conn = get_db()
+                conn.execute("INSERT INTO licenses (license_key, email) VALUES (?, ?)", (license_key, email))
+                conn.commit()
+                conn.close()
+            except Exception as e:
+                print(f"[ClearCut] Error saving specific license: {e}")
+        else:
+            # Fallback if no client_reference_id
+            license_key = create_license(email)
 
         # Send email (if SendGrid configured)
         send_license_email(email, license_key)
