@@ -1,5 +1,7 @@
 fastapi
-uvicorn
-rembg
+uvicorn[standard]
+gunicorn
+rembg[cpu]
 stripe
 python-dotenv
+python-multipart
