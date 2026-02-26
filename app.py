@@ -658,7 +658,9 @@ async def main():
                     const resp = await fetch('/create-checkout', { method: 'POST' });
                     const data = await resp.json();
                     if (data.url) {
-                        window.location.href = data.url;
+                        // Hugging Face embeds apps in an iframe. Stripe Checkout blocks iframes (X-Frame-Options: DENY).
+                        // Opening it in the same frame turns the screen white. We must open it in a new tab.
+                        window.open(data.url, '_blank');
                     } else {
                         console.error("Backend error:", data);
                         alert(`Stripe Checkout Error: ${data.error || 'Unknown error'}`);
