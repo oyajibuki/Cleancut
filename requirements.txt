@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+rembg
+stripe
+python-dotenv
