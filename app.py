@@ -1120,6 +1120,17 @@ async def stripe_webhook(request: Request):
         return JSONResponse(status_code=400, content={"error": str(e)})
 
 
+@app.get("/debug")
+async def debug_endpoint(request: Request):
+    """Simple endpoint to verify the server is running and accessible"""
+    return {
+        "status": "ok",
+        "client_host": request.client.host if request.client else "unknown",
+        "headers": dict(request.headers),
+        "env_keys": list(os.environ.keys())
+    }
+
+
 # Dev/test helper: manually generate a license
 @app.post("/generate-test-license")
 async def generate_test_license(request: Request):
