@@ -474,13 +474,12 @@ async def main():
                 position: absolute;
                 top: 20px;
                 right: 20px;
-                font-family: 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
                 z-index: 10000;
             }
             .custom-select-wrapper {
                 position: relative;
                 user-select: none;
-                width: 140px;
+                width: 160px;
             }
             .custom-select {
                 background: #f1f5f9;
@@ -491,8 +490,8 @@ async def main():
                 font-size: 0.85rem;
                 cursor: pointer;
                 display: flex;
-                justify-content: space-between;
                 align-items: center;
+                gap: 8px;
                 transition: background 0.2s;
             }
             .custom-select:hover {
@@ -502,6 +501,7 @@ async def main():
                 content: "▼";
                 font-size: 0.6rem;
                 color: #64748b;
+                margin-left: auto;
             }
             .custom-options {
                 position: absolute;
@@ -523,11 +523,31 @@ async def main():
                 padding: 8px 10px;
                 font-size: 0.85rem;
                 cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
                 transition: background 0.2s;
             }
             .custom-option:hover {
                 background: #f8fafc;
             }
+
+            /* Flag Icons */
+            .flag-icon {
+                width: 20px;
+                height: 14px;
+                display: inline-block;
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                border-radius: 2px;
+                box-shadow: 0 0 1px rgba(0,0,0,0.2);
+            }
+            .flag-en { background-image: url("https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/us.svg"); }
+            .flag-ja { background-image: url("https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/jp.svg"); }
+            .flag-zh { background-image: url("https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/cn.svg"); }
+            .flag-hi { background-image: url("https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/in.svg"); }
+            .flag-pt { background-image: url("https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/flags/4x3/br.svg"); }
             .modal-box input {
                 width: 100%;
                 padding: 10px 14px;
@@ -569,13 +589,15 @@ async def main():
         <!-- Language Switcher -->
         <div class="lang-switcher">
             <div class="custom-select-wrapper" id="langDropdown">
-                <div class="custom-select" id="langSelectBtn">🇺🇸 English</div>
+                <div class="custom-select" id="langSelectBtn">
+                    <span class="flag-icon flag-en"></span> English
+                </div>
                 <div class="custom-options" id="langOptions">
-                    <div class="custom-option" data-value="en">🇺🇸 English</div>
-                    <div class="custom-option" data-value="ja">🇯🇵 日本語</div>
-                    <div class="custom-option" data-value="zh">🇨🇳 中文</div>
-                    <div class="custom-option" data-value="hi">🇮🇳 हिन्दी</div>
-                    <div class="custom-option" data-value="pt">🇧🇷 Português (BR)</div>
+                    <div class="custom-option" data-value="en"><span class="flag-icon flag-en"></span> English</div>
+                    <div class="custom-option" data-value="ja"><span class="flag-icon flag-ja"></span> 日本語</div>
+                    <div class="custom-option" data-value="zh"><span class="flag-icon flag-zh"></span> 中文</div>
+                    <div class="custom-option" data-value="hi"><span class="flag-icon flag-hi"></span> हिन्दी</div>
+                    <div class="custom-option" data-value="pt"><span class="flag-icon flag-pt"></span> Português (BR)</div>
                 </div>
             </div>
         </div>
