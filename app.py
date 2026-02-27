@@ -469,6 +469,55 @@ async def main():
             .modal-msg.error { color: #ef4444; }
             .modal-msg.success { color: #059669; }
 
+            /* Language Switcher */
+            .lang-switcher {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+            }
+            .lang-switcher select {
+                background: #f1f5f9;
+                color: #1e293b;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 6px 10px;
+                font-family: inherit;
+                font-size: 0.85rem;
+                cursor: pointer;
+                outline: none;
+            }
+            .lang-switcher select:hover {
+                background: #e2e8f0;
+            }
+            .modal-box input {
+                width: 100%;
+                padding: 10px 14px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                font-size: 1rem;
+                font-family: monospace;
+                letter-spacing: 1px;
+                text-align: center;
+                margin-bottom: 12px;
+            }
+            .modal-box input:focus {
+                outline: none;
+                border-color: #2563eb;
+                box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+            }
+            .modal-actions {
+                display: flex;
+                gap: 10px;
+                justify-content: flex-end;
+            }
+            .modal-msg {
+                font-size: 0.82rem;
+                margin-top: 8px;
+                text-align: center;
+            }
+            .modal-msg.error { color: #ef4444; }
+            .modal-msg.success { color: #059669; }
+
             @media (max-width: 640px) {
                 h1 { font-size: 1.5rem; }
                 .container { flex-direction: column; align-items: center; }
@@ -478,55 +527,65 @@ async def main():
         </style>
     </head>
     <body>
+        <!-- Language Switcher -->
+        <div class="lang-switcher">
+            <select id="langSelect">
+                <option value="en">English</option>
+                <option value="ja">日本語</option>
+                <option value="zh">中文</option>
+                <option value="hi">हिन्दी</option>
+                <option value="pt">Português (BR)</option>
+            </select>
+        </div>
 
         <!-- Full-screen loading overlay -->
         <div class="loading-fullscreen" id="loadingFullscreen">
             <div class="loading-spinner"></div>
-            <div class="loading-label">Removing background…</div>
-            <div class="loading-sub">This may take a few seconds</div>
+            <div class="loading-label" data-i18n="loading_label">Removing background…</div>
+            <div class="loading-sub" data-i18n="loading_sub">This may take a few seconds</div>
         </div>
 
         <h1>ClearCut</h1>
-        <p class="subtitle">Simple. Fast. Just works.</p>
+        <p class="subtitle" data-i18n="subtitle">Simple. Fast. Just works.</p>
 
         <!-- Upload area -->
         <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
-            <p class="upload-text">Drop image here or <strong>click to upload</strong></p>
+            <p class="upload-text" data-i18n="upload_text">Drop image here or <strong>click to upload</strong></p>
             <input type="file" id="fileInput" accept="image/*">
         </div>
 
         <!-- Model selector -->
         <div class="model-selector">
-            <label for="modelSelect">Model:</label>
+            <label for="modelSelect" data-i18n="model_label">Model:</label>
             <select id="modelSelect">
-                <option value="isnet-general-use" selected>ISNet (High Quality)</option>
-                <option value="u2net">U2Net (Standard)</option>
-                <option value="u2net_human_seg">U2Net (Portrait)</option>
-                <option value="silueta">Silueta (Fast)</option>
+                <option value="isnet-general-use" selected data-i18n="model_hq">ISNet (High Quality)</option>
+                <option value="u2net" data-i18n="model_std">U2Net (Standard)</option>
+                <option value="u2net_human_seg" data-i18n="model_portrait">U2Net (Portrait)</option>
+                <option value="silueta" data-i18n="model_fast">Silueta (Fast)</option>
             </select>
         </div>
 
         <div class="action-bar">
-            <button class="btn btn-primary" id="removeBgBtn" disabled>Remove Background</button>
+            <button class="btn btn-primary" id="removeBgBtn" disabled data-i18n="remove_bg_btn">Remove Background</button>
         </div>
 
         <!-- Usage bar -->
         <div class="usage-bar" id="usageBar"></div>
         <div style="text-align:center;">
-            <button class="upgrade-link hidden" id="upgradeBtn">Upgrade to Pro</button>
-            <button class="license-link" id="licenseLink">Already have a license? Enter here.</button>
+            <button class="upgrade-link hidden" id="upgradeBtn" data-i18n="upgrade_btn">Upgrade to Pro</button>
+            <button class="license-link" id="licenseLink" data-i18n="has_license">Already have a license? Enter here.</button>
         </div>
 
         <!-- License modal -->
         <div class="modal-overlay" id="licenseModal">
             <div class="modal-box">
-                <h2>Enter License Key</h2>
-                <p>Paste the key you received after purchase.</p>
+                <h2 data-i18n="modal_license_title">Enter License Key</h2>
+                <p data-i18n="modal_license_desc">Paste the key you received after purchase.</p>
                 <input type="text" id="licenseInput" placeholder="CC-XXXX-XXXX-XXXX-XXXX" maxlength="24">
                 <div class="modal-msg hidden" id="licenseMsg"></div>
                 <div class="modal-actions">
-                    <button class="btn btn-secondary" id="licenseCancel">Cancel</button>
-                    <button class="btn btn-primary" id="licenseSubmit">Activate</button>
+                    <button class="btn btn-secondary" id="licenseCancel" data-i18n="cancel">Cancel</button>
+                    <button class="btn btn-primary" id="licenseSubmit" data-i18n="activate">Activate</button>
                 </div>
             </div>
         </div>
@@ -534,14 +593,14 @@ async def main():
         <!-- Success modal -->
         <div class="modal-overlay" id="successModal">
             <div class="modal-box">
-                <h2>🎉 Payment Successful!</h2>
-                <p>Thank you for upgrading! Your License Key is below. It has been automatically saved, but please copy and keep it safe.</p>
+                <h2 data-i18n="modal_payment_title">🎉 Payment Successful!</h2>
+                <p data-i18n="modal_payment_desc">Thank you for upgrading! Your License Key is below. It has been automatically saved, but please copy and keep it safe.</p>
                 <div style="display: flex; gap: 8px; margin-top: 15px; margin-bottom: 20px;">
                     <input type="text" id="successLicenseInput" readonly style="flex: 1; font-weight: bold; text-align: center; font-size: 1.1rem; color: #3b82f6; background: #f8fafc; cursor: text;">
-                    <button class="btn btn-primary" id="copyLicenseBtn" style="padding: 10px 16px;">Copy</button>
+                    <button class="btn btn-primary" id="copyLicenseBtn" style="padding: 10px 16px;" data-i18n="copy">Copy</button>
                 </div>
                 <div class="modal-actions" style="justify-content: center;">
-                    <button class="btn btn-secondary" id="successCloseBtn">Close</button>
+                    <button class="btn btn-secondary" id="successCloseBtn" data-i18n="close">Close</button>
                 </div>
             </div>
         </div>
@@ -549,7 +608,7 @@ async def main():
         <div class="container hidden" id="resultContainer">
             <!-- Original -->
             <div class="box">
-                <h3>Original</h3>
+                <h3 data-i18n="result_original">Original</h3>
                 <div class="image-wrapper" style="background: #fff;">
                     <img id="preview" />
                 </div>
@@ -557,7 +616,7 @@ async def main():
 
             <!-- Result -->
             <div class="box">
-                <h3>Result</h3>
+                <h3 data-i18n="result_final">Result</h3>
                 <div class="image-wrapper" id="resultWrapper">
                     <div class="canvas-wrapper" id="canvasWrapper">
                         <img id="resultImg" />
@@ -568,21 +627,21 @@ async def main():
                 <!-- Brush toolbar -->
                 <div class="brush-toolbar" id="brushToolbar">
                     <div class="brush-row">
-                        <label>Brush Size</label>
+                        <label data-i18n="brush_size">Brush Size</label>
                         <input type="range" id="brushSize" min="3" max="80" value="20">
                         <span class="value" id="brushSizeVal">20</span>
                     </div>
                     <div class="brush-actions">
-                        <button class="btn btn-erase active-mode" id="eraseBtn"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg> Erase</button>
-                        <button class="btn btn-restore" id="restoreBtn"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4l-1 1 4 4 1-1a2.83 2.83 0 0 0-4-4Z"/><path d="M13.5 6.5 5 15v4h4l8.5-8.5"/><line x1="2" y1="2" x2="5" y2="5"/><line x1="18" y1="13" x2="21" y2="10"/><line x1="3" y1="8" x2="1" y2="6"/></svg> Restore</button>
-                        <button class="btn btn-secondary" id="undoBtn">Undo</button>
-                        <span class="mode-badge erase" id="modeBadge">Erase</span>
+                        <button class="btn btn-erase active-mode" id="eraseBtn"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg> <span data-i18n="brush_erase">Erase</span></button>
+                        <button class="btn btn-restore" id="restoreBtn"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4l-1 1 4 4 1-1a2.83 2.83 0 0 0-4-4Z"/><path d="M13.5 6.5 5 15v4h4l8.5-8.5"/><line x1="2" y1="2" x2="5" y2="5"/><line x1="18" y1="13" x2="21" y2="10"/><line x1="3" y1="8" x2="1" y2="6"/></svg> <span data-i18n="brush_restore">Restore</span></button>
+                        <button class="btn btn-secondary" id="undoBtn" data-i18n="brush_undo">Undo</button>
+                        <span class="mode-badge erase" id="modeBadge" data-i18n="brush_erase">Erase</span>
                     </div>
                 </div>
 
                 <!-- Download button -->
                 <div class="action-bar" id="resultActions" style="display:none;">
-                    <button class="btn btn-download" id="downloadBtn">Download</button>
+                    <button class="btn btn-download" id="downloadBtn" data-i18n="download_btn">Download</button>
                 </div>
             </div>
         </div>
@@ -591,6 +650,181 @@ async def main():
         (() => {
             // Record page access
             fetch('/record-access', { method: 'POST' }).catch(e => console.error("Access record failed", e));
+
+            // Localization Dictionary
+            const translations = {
+                en: {
+                    loading_label: "Removing background…",
+                    loading_sub: "This may take a few seconds",
+                    subtitle: "Simple. Fast. Just works.",
+                    upload_text: "Drop image here or <strong>click to upload</strong>",
+                    model_label: "Model:",
+                    model_hq: "ISNet (High Quality)",
+                    model_std: "U2Net (Standard)",
+                    model_portrait: "U2Net (Portrait)",
+                    model_fast: "Silueta (Fast)",
+                    remove_bg_btn: "Remove Background",
+                    upgrade_btn: "Upgrade to Pro",
+                    has_license: "Already have a license? Enter here.",
+                    modal_license_title: "Enter License Key",
+                    modal_license_desc: "Paste the key you received after purchase.",
+                    cancel: "Cancel",
+                    activate: "Activate",
+                    modal_payment_title: "🎉 Payment Successful!",
+                    modal_payment_desc: "Thank you for upgrading! Your License Key is below. It has been automatically saved, but please copy and keep it safe.",
+                    copy: "Copy",
+                    close: "Close",
+                    result_original: "Original",
+                    result_final: "Result",
+                    brush_size: "Brush Size",
+                    brush_erase: "Erase",
+                    brush_restore: "Restore",
+                    brush_undo: "Undo",
+                    download_btn: "Download"
+                },
+                ja: {
+                    loading_label: "背景を切り抜いています…",
+                    loading_sub: "数秒かかる場合があります",
+                    subtitle: "シンプル。爆速。美しい。",
+                    upload_text: "ここに画像をドロップするか、<strong>クリックしてアップロード</strong>",
+                    model_label: "AIモデル:",
+                    model_hq: "ISNet (最高画質)",
+                    model_std: "U2Net (標準)",
+                    model_portrait: "U2Net (人物向け)",
+                    model_fast: "Silueta (超高速)",
+                    remove_bg_btn: "背景を削除",
+                    upgrade_btn: "Pro版へアップグレード",
+                    has_license: "ライセンスをお持ちの方はこちら",
+                    modal_license_title: "ライセンスキー入力",
+                    modal_license_desc: "購入時に発行されたキーを貼り付けてください。",
+                    cancel: "キャンセル",
+                    activate: "有効化",
+                    modal_payment_title: "🎉 お支払いが完了しました！",
+                    modal_payment_desc: "アップグレードありがとうございます！あなたのライセンスキーは以下の通りです。自動で保存されますが、念のためコピーして保管してください。",
+                    copy: "コピー",
+                    close: "閉じる",
+                    result_original: "元画像",
+                    result_final: "切り抜き結果",
+                    brush_size: "ブラシサイズ",
+                    brush_erase: "消す",
+                    brush_restore: "戻す",
+                    brush_undo: "元に戻す",
+                    download_btn: "ダウンロード"
+                },
+                zh: {
+                    loading_label: "正在抠图中…",
+                    loading_sub: "这可能需要几秒钟",
+                    subtitle: "极简。极速。效果完美。",
+                    upload_text: "将图片拖拽到此处，或 <strong>点击上传</strong>",
+                    model_label: "AI模型:",
+                    model_hq: "ISNet (最高画质)",
+                    model_std: "U2Net (标准)",
+                    model_portrait: "U2Net (人像优化)",
+                    model_fast: "Silueta (极速)",
+                    remove_bg_btn: "一键抠图",
+                    upgrade_btn: "升级专业版",
+                    has_license: "已有许可证？在此输入",
+                    modal_license_title: "输入许可证密钥",
+                    modal_license_desc: "请粘贴您购买后收到的密钥。",
+                    cancel: "取消",
+                    activate: "激活",
+                    modal_payment_title: "🎉 支付成功！",
+                    modal_payment_desc: "感谢您的升级！下方是您的许可证密钥。它已自动保存，但请复制并妥善保管。",
+                    copy: "复制",
+                    close: "关闭",
+                    result_original: "原图",
+                    result_final: "抠图结果",
+                    brush_size: "画笔大小",
+                    brush_erase: "擦除",
+                    brush_restore: "恢复",
+                    brush_undo: "撤销",
+                    download_btn: "下载"
+                },
+                hi: {
+                    loading_label: "बैकग्राउंड हटाया जा रहा है…",
+                    loading_sub: "इसमें कुछ सेकंड लग सकते हैं",
+                    subtitle: "आसान। तेज़। बेहतरीन काम।",
+                    upload_text: "यहां फोटो छोड़ें या <strong>अपलोड करने के लिए क्लिक करें</strong>",
+                    model_label: "AI मॉडल:",
+                    model_hq: "ISNet (हाई क्वालिटी)",
+                    model_std: "U2Net (स्टैंडर्ड)",
+                    model_portrait: "U2Net (पोर्ट्रेट)",
+                    model_fast: "Silueta (फास्ट)",
+                    remove_bg_btn: "बैकग्राउंड हटाएं",
+                    upgrade_btn: "प्रो में अपग्रेड करें",
+                    has_license: "पहले से लाइसेंस है? यहां डालें",
+                    modal_license_title: "लाइसेंस की दर्ज करें",
+                    modal_license_desc: "खरीदने के बाद मिली की (Key) को यहां पेस्ट करें।",
+                    cancel: "रद्द करें",
+                    activate: "एक्टिवेट करें",
+                    modal_payment_title: "🎉 पेमेंट सफल!",
+                    modal_payment_desc: "अपग्रेड करने के लिए धन्यवाद! आपकी लाइसेंस की नीचे है। यह ऑटोमैटिक रूप से सेव हो गई है, लेकिन कृपया इसे कॉपी करके सुरक्षित रखें।",
+                    copy: "कॉपी",
+                    close: "बंद करें",
+                    result_original: "ओरिजिनल",
+                    result_final: "रिजल्ट",
+                    brush_size: "ब्रश का आकार",
+                    brush_erase: "मिटाएं",
+                    brush_restore: "वापस लाएं",
+                    brush_undo: "अंडू (Undo)",
+                    download_btn: "डाउनलोड"
+                },
+                pt: {
+                    loading_label: "Removendo fundo…",
+                    loading_sub: "Isso pode levar alguns segundos",
+                    subtitle: "Simples. Rápido. Funciona.",
+                    upload_text: "Arraste a imagem aqui ou <strong>clique para enviar</strong>",
+                    model_label: "Modelo:",
+                    model_hq: "ISNet (Alta Qualidade)",
+                    model_std: "U2Net (Padrão)",
+                    model_portrait: "U2Net (Retratos)",
+                    model_fast: "Silueta (Rápido)",
+                    remove_bg_btn: "Remover Fundo",
+                    upgrade_btn: "Atualizar para Pro",
+                    has_license: "Já tem licença? Insira aqui",
+                    modal_license_title: "Insira a Chave da Licença",
+                    modal_license_desc: "Cole aqui a chave que você recebeu após a compra.",
+                    cancel: "Cancelar",
+                    activate: "Ativar",
+                    modal_payment_title: "🎉 Pagamento Aprovado!",
+                    modal_payment_desc: "Obrigado por atualizar! Sua Chave de Licença está abaixo. Ela foi salva automaticamente, mas copie-a para segurança.",
+                    copy: "Copiar",
+                    close: "Fechar",
+                    result_original: "Original",
+                    result_final: "Resultado",
+                    brush_size: "Tamanho do Pincel",
+                    brush_erase: "Apagar",
+                    brush_restore: "Restaurar",
+                    brush_undo: "Desfazer",
+                    download_btn: "Baixar"
+                }
+            };
+
+            const langSelect = document.getElementById('langSelect');
+            
+            // Set language via UI
+            function setLanguage(lang) {
+                if (!translations[lang]) lang = 'en';
+                const dict = translations[lang];
+                document.documentElement.lang = lang;
+                
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if (dict[key]) {
+                        el.innerHTML = dict[key];
+                    }
+                });
+                langSelect.value = lang;
+                localStorage.setItem('clearcut_lang', lang);
+            }
+
+            // Init language on load
+            const savedLang = localStorage.getItem('clearcut_lang') || 'en';
+            setLanguage(savedLang);
+
+            langSelect.addEventListener('change', (e) => {
+                setLanguage(e.target.value);
+            });
 
             const dropZone = document.getElementById('dropZone');
             const fileInput = document.getElementById('fileInput');
