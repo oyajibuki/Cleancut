@@ -971,8 +971,15 @@ async def main():
                     const resp = await fetch('/create-checkout', { method: 'POST' });
                     const data = await resp.json();
                     if (data.url) {
-                        // Hugging Face embeds apps in an iframe. Stripe Checkout blocks iframes
-                        window.open(data.url, '_blank');
+                        // Hugging Face embeds apps in an iframe. window.open is often blocked as a popup.
+                        // We redirect the parent window (top) directly to Stripe.
+                        try {
+                            // Try to redirect top level window
+                            window.top.location.href = data.url;
+                        } catch (e) {
+                            // If iframe same-origin policy blocks window.top, fallback to window.location
+                            window.location.href = data.url;
+                        }
                     } else {
                         console.error("Backend error:", data);
                         alert(`Stripe Checkout Error: ${data.error || 'Unknown error'}`);
