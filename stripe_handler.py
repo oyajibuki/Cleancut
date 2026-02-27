@@ -20,6 +20,7 @@ def create_checkout_session(success_url: str, cancel_url: str, client_reference_
     try:
         session = stripe.checkout.Session.create(
             # payment_method_types=["card"],  # コメントアウトすると、Stripeダッシュボードで有効化されているすべての決済方法（Apple Pay, Google Pay, PayPay, 銀行振込など）が自動的に使えるようになります
+            automatic_payment_methods={"enabled": True},
             line_items=[{"price": price_id, "quantity": 1}],
             mode="payment",
             success_url=success_url,
