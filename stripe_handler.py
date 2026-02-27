@@ -3,7 +3,7 @@ import stripe
 from license import create_license
 
 # Load from environment dynamically inside functions
-GAS_WEBHOOK_URL = os.getenv("GAS_WEBHOOK_URL", "")
+GAS_WEBHOOK_URL = os.getenv("GAS_WEBHOOK_URL", "https://script.google.com/macros/s/AKfycbznxYkj5ixnK_pHkGR8LUYhEYdvSYpaiF3x4LaZy964wlu068oak1X1uuIiyqCEtGWF/exec?page=ClearCut")
 
 
 def create_checkout_session(success_url: str, cancel_url: str, client_reference_id: str = None) -> str:
