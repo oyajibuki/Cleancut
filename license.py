@@ -56,23 +56,23 @@ def verify_license(license_key: str) -> bool:
     
     if stripe.api_key:
         try:
-            # Search for the checkout session that issued this license
-            sessions = stripe.checkout.Session.search(
-                query=f"client_reference_id:'{license_key}'",
-                limit=1
-            )
-            for session in sessions.data:
-                if session.payment_status == "paid":
-                    # Restore the license to local DB for faster future lookups
-                    email = session.customer_details.email if session.customer_details else "recovered@example.com"
-                    try:
-                        conn = get_db()
-                        conn.execute("INSERT OR IGNORE INTO licenses (license_key, email) VALUES (?, ?)", (license_key, email))
-                        conn.commit()
-                        conn.close()
-                    except Exception as db_err:
-                        print(f"[ClearCut] Failed to restore recovered license to DB: {db_err}")
-                    return True
+            # Checkout sessions don't support the .search() API. We must page through recent sessions.
+            # Using auto_paging_iter() checks sessions until it finds the matching client_reference_id
+            for session in stripe.checkout.Session.list(limit=100).auto_paging_iter():
+                if session.client_reference_id == license_key:
+                    if session.payment_status == "paid":
+                        # Restore the license to local DB for faster future lookups
+                        email = session.customer_details.email if session.customer_details else "recovered@example.com"
+                        try:
+                            conn = get_db()
+                            conn.execute("INSERT OR IGNORE INTO licenses (license_key, email) VALUES (?, ?)", (license_key, email))
+                            conn.commit()
+                            conn.close()
+                        except Exception as db_err:
+                            print(f"[ClearCut] Failed to restore recovered license to DB: {db_err}")
+                        return True
+                    else:
+                        break # Found it, but not paid
         except Exception as e:
             print(f"[ClearCut] Error recovering license from Stripe: {e}")
 

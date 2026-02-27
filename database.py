@@ -1,7 +1,12 @@
 import sqlite3
 import os
-
-DB_PATH = os.path.join(os.path.dirname(__file__), "clearcut.db")
+if os.getenv("SPACE_ID"):
+    # Running in Hugging Face Spaces: Use persistent storage
+    os.makedirs("/data", exist_ok=True)
+    DB_PATH = "/data/clearcut.db"
+else:
+    # Running locally
+    DB_PATH = os.path.join(os.path.dirname(__file__), "clearcut.db")
 
 
 def get_db():
