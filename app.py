@@ -530,11 +530,11 @@ async def main():
         <!-- Language Switcher -->
         <div class="lang-switcher">
             <select id="langSelect">
-                <option value="en">English</option>
-                <option value="ja">日本語</option>
-                <option value="zh">中文</option>
-                <option value="hi">हिन्दी</option>
-                <option value="pt">Português (BR)</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="ja">🇯🇵 日本語</option>
+                <option value="zh">🇨🇳 中文</option>
+                <option value="hi">🇮🇳 हिन्दी</option>
+                <option value="pt">🇧🇷 Português (BR)</option>
             </select>
         </div>
 
