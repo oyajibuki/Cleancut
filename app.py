@@ -469,25 +469,64 @@ async def main():
             .modal-msg.error { color: #ef4444; }
             .modal-msg.success { color: #059669; }
 
-            /* Language Switcher */
+            /* Language Switcher Custom Dropdown */
             .lang-switcher {
                 position: absolute;
                 top: 20px;
                 right: 20px;
+                font-family: 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+                z-index: 10000;
             }
-            .lang-switcher select {
+            .custom-select-wrapper {
+                position: relative;
+                user-select: none;
+                width: 140px;
+            }
+            .custom-select {
                 background: #f1f5f9;
                 color: #1e293b;
                 border: 1px solid #e2e8f0;
                 border-radius: 8px;
                 padding: 6px 10px;
-                font-family: inherit;
                 font-size: 0.85rem;
                 cursor: pointer;
-                outline: none;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                transition: background 0.2s;
             }
-            .lang-switcher select:hover {
+            .custom-select:hover {
                 background: #e2e8f0;
+            }
+            .custom-select::after {
+                content: "▼";
+                font-size: 0.6rem;
+                color: #64748b;
+            }
+            .custom-options {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: #fff;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                margin-top: 4px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                overflow: hidden;
+                display: none;
+            }
+            .custom-options.open {
+                display: block;
+            }
+            .custom-option {
+                padding: 8px 10px;
+                font-size: 0.85rem;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+            .custom-option:hover {
+                background: #f8fafc;
             }
             .modal-box input {
                 width: 100%;
@@ -529,13 +568,16 @@ async def main():
     <body>
         <!-- Language Switcher -->
         <div class="lang-switcher">
-            <select id="langSelect">
-                <option value="en">🇺🇸 English</option>
-                <option value="ja">🇯🇵 日本語</option>
-                <option value="zh">🇨🇳 中文</option>
-                <option value="hi">🇮🇳 हिन्दी</option>
-                <option value="pt">🇧🇷 Português (BR)</option>
-            </select>
+            <div class="custom-select-wrapper" id="langDropdown">
+                <div class="custom-select" id="langSelectBtn">🇺🇸 English</div>
+                <div class="custom-options" id="langOptions">
+                    <div class="custom-option" data-value="en">🇺🇸 English</div>
+                    <div class="custom-option" data-value="ja">🇯🇵 日本語</div>
+                    <div class="custom-option" data-value="zh">🇨🇳 中文</div>
+                    <div class="custom-option" data-value="hi">🇮🇳 हिन्दी</div>
+                    <div class="custom-option" data-value="pt">🇧🇷 Português (BR)</div>
+                </div>
+            </div>
         </div>
 
         <!-- Full-screen loading overlay -->
@@ -800,7 +842,19 @@ async def main():
                 }
             };
 
-            const langSelect = document.getElementById('langSelect');
+            // Language logic
+            const langSelectBtn = document.getElementById('langSelectBtn');
+            const langOptionsBox = document.getElementById('langOptions');
+            const customOptions = document.querySelectorAll('.custom-option');
+
+            langSelectBtn.addEventListener('click', (e) => {
+                langOptionsBox.classList.toggle('open');
+                e.stopPropagation();
+            });
+
+            document.addEventListener('click', () => {
+                langOptionsBox.classList.remove('open');
+            });
             
             // Set language via UI
             function setLanguage(lang) {
@@ -814,7 +868,12 @@ async def main():
                         el.innerHTML = dict[key];
                     }
                 });
-                langSelect.value = lang;
+                
+                // Update dropdown text
+                const activeOption = document.querySelector(`.custom-option[data-value="${lang}"]`);
+                if (activeOption) {
+                    langSelectBtn.innerHTML = activeOption.innerHTML;
+                }
                 localStorage.setItem('clearcut_lang', lang);
             }
 
@@ -822,8 +881,10 @@ async def main():
             const savedLang = localStorage.getItem('clearcut_lang') || 'en';
             setLanguage(savedLang);
 
-            langSelect.addEventListener('change', (e) => {
-                setLanguage(e.target.value);
+            customOptions.forEach(opt => {
+                opt.addEventListener('click', (e) => {
+                    setLanguage(e.target.getAttribute('data-value'));
+                });
             });
 
             const dropZone = document.getElementById('dropZone');
