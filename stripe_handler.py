@@ -3,8 +3,7 @@ import stripe
 from license import create_license
 
 # Load from environment dynamically inside functions
-SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY", "")
-SENDGRID_FROM_EMAIL = os.getenv("SENDGRID_FROM_EMAIL", "noreply@clearcut.app")
+GAS_WEBHOOK_URL = os.getenv("GAS_WEBHOOK_URL", "")
 
 
 def create_checkout_session(success_url: str, cancel_url: str, client_reference_id: str = None) -> str:
@@ -61,7 +60,7 @@ def handle_webhook(payload: bytes, sig_header: str) -> dict:
             # Fallback if no client_reference_id
             license_key = create_license(email)
 
-        # Send email (if SendGrid configured)
+        # Send email and save to DB via GAS Webhook
         send_license_email(email, license_key)
 
         print(f"[ClearCut] License issued: {license_key} for {email}")
@@ -71,49 +70,31 @@ def handle_webhook(payload: bytes, sig_header: str) -> dict:
 
 
 def send_license_email(to_email: str, license_key: str):
-    """Send license key via email and a BCC copy to admin. Falls back to console output if SendGrid not configured."""
-    if not SENDGRID_API_KEY:
-        print(f"[ClearCut] Email not configured. License for {to_email}: {license_key}")
+    """Send license key to the GAS Webhook to handle email delivery and DB storage."""
+    if not GAS_WEBHOOK_URL:
+        print(f"[ClearCut] GAS Webhook not configured. License for {to_email}: {license_key}")
         return
 
     try:
-        import sendgrid
-        from sendgrid.helpers.mail import Mail
-
-        sg = sendgrid.SendGridAPIClient(api_key=SENDGRID_API_KEY)
+        import urllib.request
+        import json
         
-        # 1. Send to Customer
-        message = Mail(
-            from_email=SENDGRID_FROM_EMAIL,
-            to_emails=to_email,
-            subject="Your ClearCut Pro License Key",
-            plain_text_content=f"""Thank you for upgrading to ClearCut Pro.
-
-Your License Key:
-
-{license_key}
-
-Enter this key in ClearCut to unlock unlimited access.
-
-— ClearCut
-Simple. Fast. Just works.""",
+        data = json.dumps({
+            "email": to_email,
+            "license_key": license_key
+        }).encode("utf-8")
+        
+        req = urllib.request.Request(
+            GAS_WEBHOOK_URL, 
+            data=data, 
+            headers={"Content-Type": "application/json"},
+            method="POST"
         )
-        sg.send(message)
-        print(f"[ClearCut] License email sent to {to_email}")
         
-        # 2. Send Admin Copy
-        try:
-            admin_msg = Mail(
-                from_email=SENDGRID_FROM_EMAIL,
-                to_emails="oyajibuki@gmail.com",
-                subject="[ADMIN COPY] ClearCut Pro License Issued",
-                plain_text_content=f"A new PRO license was successfully issued.\n\nCustomer Email: {to_email}\nLicense Key: {license_key}\n\n— ClearCut Automatic System",
-            )
-            sg.send(admin_msg)
-            print("[ClearCut] Admin copy sent to oyajibuki@gmail.com")
-        except Exception as admin_err:
-            print(f"[ClearCut] Failed to send admin copy: {admin_err}")
+        with urllib.request.urlopen(req) as response:
+            result = response.read().decode("utf-8")
+            print(f"[ClearCut] GAS Webhook Response: {result}")
             
     except Exception as e:
-        print(f"[ClearCut] Failed to send email: {e}")
-        print(f"[ClearCut] License for {to_email}: {license_key}")
+        print(f"[ClearCut] Failed to send to GAS Webhook: {e}")
+        print(f"[ClearCut] Backup License info for {to_email}: {license_key}")
