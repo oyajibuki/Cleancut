@@ -3,7 +3,7 @@ import stripe
 from license import create_license
 
 # Load from environment dynamically inside functions
-GAS_WEBHOOK_URL = os.getenv("GAS_WEBHOOK_URL", "https://script.google.com/macros/s/AKfycbznxYkj5ixnK_pHkGR8LUYhEYdvSYpaiF3x4LaZy964wlu068oak1X1uuIiyqCEtGWF/exec?page=ClearCut")
+GAS_WEBHOOK_URL = os.getenv("GAS_WEBHOOK_URL", "https://script.google.com/macros/s/AKfycbzmBWscXUWg2OgvDKwe8jZE84mYh93ufXMJp368MRcex8I7-R3qRiAbbeii_ARUQg5e2A/exec")
 
 
 def create_checkout_session(success_url: str, cancel_url: str, client_reference_id: str = None) -> str:
@@ -80,6 +80,7 @@ def send_license_email(to_email: str, license_key: str):
         import json
         
         data = json.dumps({
+            "type": "license",
             "email": to_email,
             "license_key": license_key
         }).encode("utf-8")

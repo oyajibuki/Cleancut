@@ -589,6 +589,9 @@ async def main():
 
         <script>
         (() => {
+            // Record page access
+            fetch('/record-access', { method: 'POST' }).catch(e => console.error("Access record failed", e));
+
             const dropZone = document.getElementById('dropZone');
             const fileInput = document.getElementById('fileInput');
             const removeBgBtn = document.getElementById('removeBgBtn');
@@ -1157,6 +1160,42 @@ async def verify_license_endpoint(request: Request):
     key = body.get("license_key", "")
     valid = verify_license(key)
     return {"valid": valid, "license_key": key}
+
+
+@app.post("/record-access")
+async def record_access(request: Request):
+    """Ping GAS webhook to record page access."""
+    ip = request.client.host
+    user_agent = request.headers.get("user-agent", "unknown")
+    
+    from stripe_handler import GAS_WEBHOOK_URL
+    if GAS_WEBHOOK_URL:
+        import urllib.request
+        import json
+        import threading
+        
+        def ping_gas():
+            try:
+                data = json.dumps({
+                    "type": "access",
+                    "ip": ip,
+                    "user_agent": user_agent
+                }).encode("utf-8")
+                
+                req = urllib.request.Request(
+                    GAS_WEBHOOK_URL, 
+                    data=data, 
+                    headers={"Content-Type": "application/json"},
+                    method="POST"
+                )
+                urllib.request.urlopen(req, timeout=5)
+            except Exception as e:
+                print(f"[ClearCut] Failed to record access to GAS: {e}")
+                
+        # Run in background to not block page load
+        threading.Thread(target=ping_gas, daemon=True).start()
+        
+    return {"status": "ok"}
 
 
 @app.post("/create-checkout")
