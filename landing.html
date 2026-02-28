@@ -144,7 +144,7 @@
             font-size: clamp(1.1rem, 2vw, 1.25rem);
             color: var(--text-gray);
             max-width: 600px;
-            margin-bottom: 2.5rem;
+            margin: 0 auto 2.5rem;
         }
 
         .hero-cta {
@@ -447,8 +447,7 @@
                     <li>専用のライセンスキーを発行</li>
                 </ul>
                 <div class="buy-options">
-                    <a href="https://checkout.stripe.com/c/pay/cs_live_a1Sftrlls21yegIFikUsRirzXmvimmT8DWGqCfEMMK8E4JefM3RW5QBknm#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdkdWxOYHwnPyd1blppbHNgWjA0UTFGMnxDVWBHTVBVUU9JfUF%2FT3VRU1RWdUA0MzJtcn9TSzFTbFxHNGJDR1Yxbl9mUG5SbUJhX3JJVH9JUDN3NUxWS21XX3VVV0twVzM0bnxoXFxTckN%2FNTV3VWxAS2N9XycpJ2N3amhWYHdzYHcnP3F3cGApJ2dkZm5id2pwa2FGamlqdyc%2FJyZjY2NjY2MnKSdpZHxqcHFRfHVgJz8ndmxrYmlgWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl"
-                        class="btn btn-primary" style="width: 100%;">公式サイトで購入
+                    <a href="#" id="stripeCheckoutBtn" class="btn btn-primary" style="width: 100%;">公式サイトで購入
                         (Stripe)</a>
                     <a href="https://booth.pm/ja/items/8042131" class="btn btn-booth btn" target="_blank"
                         style="width: 100%;">BOOTHで購入する</a>
@@ -471,6 +470,37 @@
         </div>
     </footer>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const stripeBtn = document.getElementById('stripeCheckoutBtn');
+            if (stripeBtn) {
+                stripeBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const originalText = stripeBtn.innerText;
+                    stripeBtn.innerText = "読み込み中...";
+                    stripeBtn.style.pointerEvents = "none";
+                    stripeBtn.style.opacity = "0.7";
+                    try {
+                        const resp = await fetch('/create-checkout', { method: 'POST' });
+                        const data = await resp.json();
+                        if (data.url) {
+                            window.location.href = data.url;
+                        } else {
+                            alert('エラーが発生しました: ' + (data.error || '不明なエラー'));
+                            stripeBtn.innerText = originalText;
+                            stripeBtn.style.pointerEvents = "auto";
+                            stripeBtn.style.opacity = "1";
+                        }
+                    } catch (err) {
+                        alert('ネットワークエラーが発生しました。');
+                        stripeBtn.innerText = originalText;
+                        stripeBtn.style.pointerEvents = "auto";
+                        stripeBtn.style.opacity = "1";
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>
