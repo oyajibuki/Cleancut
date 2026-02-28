@@ -1,5 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, Form, Request, Header
 from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from rembg import remove, new_session
 import io
 import os
@@ -25,6 +26,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.mount("/public", StaticFiles(directory="public"), name="public")
+
 sk = os.getenv("STRIPE_SECRET_KEY", "NOT_FOUND")
 print(f"DEBUG APP LOAD - SK: {sk[:10]}...")
 
@@ -36,6 +39,11 @@ session = new_session("isnet-general-use")
 
 
 @app.get("/", response_class=HTMLResponse)
+async def landing_page():
+    with open("landing.html", "r", encoding="utf-8") as f:
+        return f.read()
+
+@app.get("/app", response_class=HTMLResponse)
 async def main():
     return """
     <!DOCTYPE html>
