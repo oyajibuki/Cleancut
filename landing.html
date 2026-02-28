@@ -484,7 +484,11 @@
                         const resp = await fetch('/create-checkout', { method: 'POST' });
                         const data = await resp.json();
                         if (data.url) {
-                            window.location.href = data.url;
+                            window.open(data.url, '_blank');
+                            // Reset the button since we opened a new tab
+                            stripeBtn.innerText = originalText;
+                            stripeBtn.style.pointerEvents = "auto";
+                            stripeBtn.style.opacity = "1";
                         } else {
                             alert('エラーが発生しました: ' + (data.error || '不明なエラー'));
                             stripeBtn.innerText = originalText;
