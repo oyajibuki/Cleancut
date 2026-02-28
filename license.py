@@ -52,6 +52,9 @@ def verify_license(license_key: str) -> bool:
     # Ping Stripe to verify if this client_reference_id exists and was paid.
     import os
     import stripe
+    import urllib.request
+    import json
+    
     stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "").strip()
     
     if stripe.api_key:
@@ -75,6 +78,29 @@ def verify_license(license_key: str) -> bool:
                         break # Found it, but not paid
         except Exception as e:
             print(f"[ClearCut] Error recovering license from Stripe: {e}")
+
+    # 3. If still not found, check Google Sheets via GAS Webhook
+    gas_url = os.getenv("GAS_WEBHOOK_URL", "").strip()
+    if gas_url:
+        try:
+            # Perform GET request to GAS URL with license_key parameter
+            req_url = f"{gas_url}?license_key={urllib.parse.quote(license_key)}"
+            with urllib.request.urlopen(req_url) as response:
+                result = json.loads(response.read().decode("utf-8"))
+                if result.get("status") == "success" and result.get("valid") is True:
+                    # Valid key found in Spreadsheet, restore to local DB
+                    email = result.get("email", "spreadsheet_recovered@example.com")
+                    try:
+                        conn = get_db()
+                        conn.execute("INSERT OR IGNORE INTO licenses (license_key, email) VALUES (?, ?)", (license_key, email))
+                        conn.commit()
+                        conn.close()
+                    except Exception as db_err:
+                        print(f"[ClearCut] Failed to restore spreadsheet license to DB: {db_err}")
+                    print(f"[ClearCut] Recovered license from Spreadsheet: {license_key}")
+                    return True
+        except Exception as e:
+            print(f"[ClearCut] Error checking license against GAS Webhook: {e}")
 
     return False
 
