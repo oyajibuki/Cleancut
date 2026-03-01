@@ -19,7 +19,6 @@ def create_checkout_session(success_url: str, cancel_url: str, client_reference_
 
     try:
         session = stripe.checkout.Session.create(
-            # payment_method_types=["card"],  # コメントアウトすると、Stripeダッシュボードで有効化されているすべての決済方法（Apple Pay, Google Pay, PayPay, 銀行振込など）が自動的に使えるようになります
             line_items=[{"price": price_id, "quantity": 1}],
             mode="payment",
             success_url=success_url,
@@ -44,6 +43,17 @@ def handle_webhook(payload: bytes, sig_header: str) -> dict:
 
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
+        
+        # ▼▼▼ 新規追加: AI Subtitleからの通知を完全に無視するためのストッパー ▼▼▼
+        # AI Subtitleは「Payment Link（固定URL）」を使っています。
+        # ClearCutは「アプリ本体から動的にCheckout画面を生成」して動作しています。
+        # そのため、Stripeから送られてきたデータに「Payment Link」の痕跡が含まれていれば、
+        # それは100%AI Subtitleの購入なので、ここで処理を終了させます。
+        if session.get("payment_link"):
+            print("[ClearCut] Ignored Payment Link checkout (belongs to AI Subtitle).")
+            return {}
+        # ▲▲▲ ここまで ▲▲▲
+
         email = session.get("customer_email") or session.get("customer_details", {}).get("email", "unknown@example.com")
         license_key = session.get("client_reference_id")
 
