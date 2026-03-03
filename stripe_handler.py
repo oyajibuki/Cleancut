@@ -44,8 +44,22 @@ def handle_webhook(payload: bytes, sig_header: str) -> dict:
 
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
+
+        # ── OshiPay / AI Subtitle からの通知を無視するフィルタ ──
+        # ① Payment Link 経由 → AI Subtitle の購入なのでスキップ
+        if session.get("payment_link"):
+            print("[ClearCut] Ignored: Payment Link checkout (AI Subtitle).")
+            return {}
+        # ② metadata.user_id あり → OshiPay の応援決済なのでスキップ
+        metadata = session.get("metadata") or {}
+        if metadata.get("user_id"):
+            print("[ClearCut] Ignored: OshiPay checkout (metadata.user_id found).")
+            return {}
+        # ─────────────────────────────────────────────────
+
         email = session.get("customer_email") or session.get("customer_details", {}).get("email", "unknown@example.com")
         license_key = session.get("client_reference_id")
+
 
         if license_key:
             from database import get_db
