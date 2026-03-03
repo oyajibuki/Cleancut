@@ -53,9 +53,11 @@ def handle_webhook(payload: bytes, sig_header: str) -> dict:
         if session.get("payment_link"):
             print("[ClearCut] Ignored: Payment Link checkout (AI Subtitle).")
             return {}
-        # ② metadata.user_id あり → OshiPay の応援決済なのでスキップ
-        if metadata.get("user_id"):
-            print("[ClearCut] Ignored: OshiPay checkout (metadata.user_id found).")
+        # ② metadata.user_id あり、または success_url が OshiPay 用の場合 → スキップ
+        # metadata が空でも success_url で確実に判定可能です
+        success_url = session.get("success_url") or ""
+        if metadata.get("user_id") or "page=success" in success_url:
+            print(f"[ClearCut] Ignored: OshiPay checkout detected (user_id={metadata.get('user_id')}, url={success_url})")
             return {}
         # ─────────────────────────────────────────────────
 
