@@ -1676,23 +1676,23 @@ async def legal_page():
       <table>
         <tr>
           <th>販売事業者</th>
-          <td>【YOUR_NAME】</td>
+          <td>関　順子</td>
         </tr>
         <tr>
           <th>所在地</th>
-          <td>【YOUR_ADDRESS】<br>
+          <td>〒418-0108　静岡県富士宮市猪之頭字内野941-35<br>
             <span style="font-size:0.82rem;color:#9ca3af">※ 請求があれば遅滞なく開示します</span>
           </td>
         </tr>
         <tr>
           <th>電話番号</th>
-          <td>【YOUR_PHONE】<br>
+          <td>080-3733-4880<br>
             <span style="font-size:0.82rem;color:#9ca3af">受付時間：平日 10:00〜18:00（メール対応を優先）</span>
           </td>
         </tr>
         <tr>
           <th>問い合わせ先</th>
-          <td>【YOUR_EMAIL】</td>
+          <td>oyajibuki@gmail.com</td>
         </tr>
         <tr>
           <th>サービス名</th>
