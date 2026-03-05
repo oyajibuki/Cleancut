@@ -1585,3 +1585,156 @@ async def generate_test_license(request: Request):
     key = create_license(email)
     print(f"[ClearCut] Test license generated: {key} for {email}")
     return {"license_key": key, "email": email}
+
+@app.get("/legal", response_class=HTMLResponse)
+async def legal_page():
+    return """<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>特定商取引法に基づく表記 | ClearCut</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: #f5f5f5;
+      color: #3a3a3a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 80px;
+    }
+    .back-link {
+      align-self: flex-start;
+      max-width: 720px;
+      width: 100%;
+      margin: 0 auto 24px;
+    }
+    .back-link a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #2563eb;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .back-link a:hover { color: #1d4ed8; }
+    .container { max-width: 720px; width: 100%; }
+    .header-section { text-align: center; margin-bottom: 36px; }
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #2d2d2d;
+      margin-bottom: 8px;
+    }
+    .header-subtitle { font-size: 0.92rem; color: #6b6b6b; }
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    tr { border-bottom: 1px solid #f0f0f0; }
+    tr:last-child { border-bottom: none; }
+    th, td { padding: 16px 20px; text-align: left; vertical-align: top; font-size: 0.92rem; line-height: 1.7; }
+    th { width: 36%; background: #fafafa; font-weight: 600; color: #6b6b6b; white-space: nowrap; }
+    td { color: #3a3a3a; }
+    .note {
+      margin-top: 20px;
+      padding: 14px 18px;
+      background: #eff6ff;
+      border-left: 4px solid #2563eb;
+      border-radius: 8px;
+      font-size: 0.84rem;
+      color: #6b6b6b;
+      line-height: 1.7;
+    }
+    @media (max-width: 540px) {
+      th { width: 40%; font-size: 0.82rem; padding: 12px 14px; }
+      td { font-size: 0.84rem; padding: 12px 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="back-link">
+    <a href="/">← ClearCut に戻る</a>
+  </div>
+  <div class="container">
+    <div class="header-section">
+      <h1>特定商取引法に基づく表記</h1>
+      <p class="header-subtitle">ClearCut</p>
+    </div>
+    <div class="card">
+      <table>
+        <tr>
+          <th>販売事業者</th>
+          <td>【YOUR_NAME】</td>
+        </tr>
+        <tr>
+          <th>所在地</th>
+          <td>【YOUR_ADDRESS】<br>
+            <span style="font-size:0.82rem;color:#9ca3af">※ 請求があれば遅滞なく開示します</span>
+          </td>
+        </tr>
+        <tr>
+          <th>電話番号</th>
+          <td>【YOUR_PHONE】<br>
+            <span style="font-size:0.82rem;color:#9ca3af">受付時間：平日 10:00〜18:00（メール対応を優先）</span>
+          </td>
+        </tr>
+        <tr>
+          <th>問い合わせ先</th>
+          <td>【YOUR_EMAIL】</td>
+        </tr>
+        <tr>
+          <th>サービス名</th>
+          <td>ClearCut（AI背景削除ツール）</td>
+        </tr>
+        <tr>
+          <th>サービス URL</th>
+          <td><a href="https://autocraft502-clearcut.hf.space" style="color:#2563eb">https://autocraft502-clearcut.hf.space</a></td>
+        </tr>
+        <tr>
+          <th>販売価格</th>
+          <td>980円（税込）</td>
+        </tr>
+        <tr>
+          <th>代金以外に<br>必要な費用</th>
+          <td>インターネット接続料金（お客様負担）</td>
+        </tr>
+        <tr>
+          <th>支払方法</th>
+          <td>クレジットカード（Stripe による決済）</td>
+        </tr>
+        <tr>
+          <th>支払時期</th>
+          <td>ご注文時にお支払いいただきます</td>
+        </tr>
+        <tr>
+          <th>サービス提供時期</th>
+          <td>決済完了後、即時にライセンスキーを発行します</td>
+        </tr>
+        <tr>
+          <th>動作環境</th>
+          <td>最新版のモダンブラウザ（Chrome / Firefox / Safari / Edge）</td>
+        </tr>
+        <tr>
+          <th>返品・返金について</th>
+          <td>デジタルコンテンツの性質上、ライセンスキー発行後の返品・返金は原則お受けできません。ただし、ライセンスキーが正常に機能しない場合は、お問い合わせ先メールよりご連絡ください。</td>
+        </tr>
+      </table>
+    </div>
+    <p class="note">
+      本表記は「特定商取引に関する法律」第11条（通信販売についての広告）に基づくものです。
+    </p>
+  </div>
+</body>
+</html>"""
