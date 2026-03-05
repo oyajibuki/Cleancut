@@ -1680,7 +1680,7 @@ async def legal_page():
         </tr>
         <tr>
           <th>所在地</th>
-          <td>〒418-0108　静岡県富士宮市猪之頭字内野941-35<br>
+          <td>〒418-0108　静岡県富士宮市猪之頭<br>
             <span style="font-size:0.82rem;color:#9ca3af">※ 請求があれば遅滞なく開示します</span>
           </td>
         </tr>
