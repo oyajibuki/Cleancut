@@ -1685,14 +1685,10 @@ async def legal_page():
           </td>
         </tr>
         <tr>
-          <th>電話番号</th>
-          <td>080-3733-4880<br>
-            <span style="font-size:0.82rem;color:#9ca3af">受付時間：平日 10:00〜18:00（メール対応を優先）</span>
+          <th>連絡先</th>
+          <td>oyajibuki@gmail.com<br>
+            <span style="font-size:0.82rem;color:#9ca3af">※ 電話番号は請求があれば遅滞なく開示します</span>
           </td>
-        </tr>
-        <tr>
-          <th>問い合わせ先</th>
-          <td>oyajibuki@gmail.com</td>
         </tr>
         <tr>
           <th>サービス名</th>
