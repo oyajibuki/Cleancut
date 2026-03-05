@@ -1420,6 +1420,9 @@ async def main():
             resizeObserver.observe(resultImg);
         })();
         </script>
+    <footer style="text-align:center;padding:20px 16px;font-size:0.8rem;color:#9ca3af;border-top:1px solid #e5e7eb;margin-top:40px;">
+      <a href="/legal" style="color:#2563eb;text-decoration:none;">特定商取引法に基づく表記</a>
+    </footer>
     </body>
     </html>
     """
@@ -1679,6 +1682,10 @@ async def legal_page():
           <td>関　順子</td>
         </tr>
         <tr>
+          <th>運営責任者</th>
+          <td>関　順子</td>
+        </tr>
+        <tr>
           <th>所在地</th>
           <td>〒418-0108　静岡県富士宮市猪之頭<br>
             <span style="font-size:0.82rem;color:#9ca3af">※ 請求があれば遅滞なく開示します</span>
@@ -1724,7 +1731,12 @@ async def legal_page():
         </tr>
         <tr>
           <th>返品・返金について</th>
-          <td>デジタルコンテンツの性質上、ライセンスキー発行後の返品・返金は原則お受けできません。ただし、ライセンスキーが正常に機能しない場合は、お問い合わせ先メールよりご連絡ください。</td>
+          <td>
+            ＜通常の場合＞<br>
+            デジタルコンテンツの性質上、ライセンスキー発行後の返品・返金は原則お受けできません。ご購入前に無料プランにてご確認ください。<br><br>
+            ＜ライセンスキーに不具合がある場合＞<br>
+            ライセンスキーが正常に機能しない等の不具合が確認された場合は、oyajibuki@gmail.com までご連絡ください。状況を確認のうえ、再発行または返金にて対応いたします。
+          </td>
         </tr>
       </table>
     </div>
