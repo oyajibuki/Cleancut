@@ -603,35 +603,29 @@ async def main():
         </style>
         <!-- HEIC/HEIF JS decoder (heic2any first, libheif-js as fallback) -->
         <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/libheif-js@1.17.1/libheif-bundle.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/libheif-js@1.17.1/libheif-wasm/libheif-bundle.js"></script>
         <script>
         // HEIC→JPEG変換（libheif-js使用）
-        let _libheifModule = null;
-        async function getLibheifModule() {
-            if (!_libheifModule) {
-                _libheifModule = await libheif(); // Emscriptenファクトリをawaitで初期化
-            }
-            return _libheifModule;
-        }
         async function convertHEICWithLibheif(file) {
-            const lib = await getLibheifModule();
+            // libheif は IIFE で初期化済みオブジェクト。WASM準備完了を待つ
+            await libheif.ready;
             const buffer = await file.arrayBuffer();
-            const decoder = new lib.HeifDecoder();
+            const decoder = new libheif.HeifDecoder();
             const data = decoder.decode(new Uint8Array(buffer));
             if (!data || data.length === 0) throw new Error('HEICデコード失敗');
             const image = data[0];
             const width = image.get_width();
             const height = image.get_height();
-            const pixelData = await new Promise((resolve, reject) => {
-                const rgba = new Uint8ClampedArray(width * height * 4);
-                image.display({ data: rgba, width, height }, (result) => {
+            const imageData = new ImageData(width, height);
+            await new Promise((resolve, reject) => {
+                image.display(imageData, (result) => {
                     if (!result) reject(new Error('display failed'));
-                    else resolve(result.data);
+                    else resolve(result);
                 });
             });
             const cvs = document.createElement('canvas');
             cvs.width = width; cvs.height = height;
-            cvs.getContext('2d').putImageData(new ImageData(pixelData, width, height), 0, 0);
+            cvs.getContext('2d').putImageData(imageData, 0, 0);
             return new Promise((resolve, reject) =>
                 cvs.toBlob(b => b ? resolve(b) : reject(new Error('toBlob失敗')), 'image/jpeg', 0.92)
             );
