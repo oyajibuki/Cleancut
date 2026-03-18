@@ -592,6 +592,8 @@ async def main():
                 .upload-area { padding: 24px 20px; }
             }
         </style>
+        <!-- HEIC/HEIF JS decoder (fallback for Windows Chrome etc.) -->
+        <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
     </head>
     <body>
         <!-- Language Switcher -->
@@ -623,7 +625,7 @@ async def main():
         <!-- Upload area -->
         <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
             <p class="upload-text" data-i18n="upload_text">Drop image here or <strong>click to upload</strong></p>
-            <input type="file" id="fileInput" accept="image/*">
+            <input type="file" id="fileInput" accept="image/*,.heic,.heif">
         </div>
 
         <!-- Model selector -->
@@ -1168,7 +1170,21 @@ async def main():
                 if (fileInput.files[0]) handleFile(fileInput.files[0]);
             });
 
-            function handleFile(file) {
+            async function handleFile(file) {
+                // HEIC/HEIF → JPEG conversion (for Windows Chrome etc.)
+                const nm = file.name.toLowerCase();
+                const isHeic = nm.endsWith('.heic') || nm.endsWith('.heif')
+                    || file.type === 'image/heic' || file.type === 'image/heif';
+                if (isHeic && typeof heic2any === 'function') {
+                    try {
+                        const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
+                        const convertedBlob = Array.isArray(converted) ? converted[0] : converted;
+                        file = new File([convertedBlob], file.name.replace(/\.heic$/i, '.jpg').replace(/\.heif$/i, '.jpg'), { type: 'image/jpeg' });
+                    } catch (e) {
+                        alert('HEIC変換に失敗しました: ' + (e.message || e));
+                        return;
+                    }
+                }
                 currentFile = file;
                 const url = URL.createObjectURL(file);
                 preview.src = url;
