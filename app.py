@@ -5,6 +5,15 @@ from rembg import remove, new_session
 import io
 import os
 
+# HEIC/HEIF support (server-side conversion)
+try:
+    import pillow_heif
+    from PIL import Image
+    pillow_heif.register_heif_opener()
+    _HEIF_SUPPORTED = True
+except ImportError:
+    _HEIF_SUPPORTED = False
+
 # Load .env if exists
 try:
     from dotenv import load_dotenv
@@ -1181,8 +1190,8 @@ async def main():
                         const convertedBlob = Array.isArray(converted) ? converted[0] : converted;
                         file = new File([convertedBlob], file.name.replace(/\.heic$/i, '.jpg').replace(/\.heif$/i, '.jpg'), { type: 'image/jpeg' });
                     } catch (e) {
-                        alert('HEIC変換に失敗しました: ' + (e.message || e));
-                        return;
+                        // JS変換失敗 → サーバー側(Python/pillow-heif)で変換するのでそのまま送信
+                        console.warn('HEIC JS変換失敗、サーバー側で処理します:', e.message || e);
                     }
                 }
                 currentFile = file;
@@ -1470,6 +1479,20 @@ async def remove_bg(
         )
 
     input_data = await file.read()
+
+    # Convert HEIC/HEIF to JPEG server-side if needed
+    fname = (file.filename or "").lower()
+    ctype = (file.content_type or "").lower()
+    if _HEIF_SUPPORTED and (
+        fname.endswith(('.heic', '.heif')) or 'heif' in ctype or 'heic' in ctype
+    ):
+        try:
+            img = Image.open(io.BytesIO(input_data))
+            buf = io.BytesIO()
+            img.convert("RGB").save(buf, format="JPEG", quality=92)
+            input_data = buf.getvalue()
+        except Exception as e:
+            return JSONResponse(status_code=400, content={"error": f"HEIC変換に失敗しました: {e}"})
 
     allowed_models = ["isnet-general-use", "u2net", "u2net_human_seg", "silueta"]
     if model not in allowed_models:

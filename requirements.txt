@@ -5,3 +5,4 @@ rembg[cpu]
 stripe
 python-dotenv
 python-multipart
+pillow-heif
