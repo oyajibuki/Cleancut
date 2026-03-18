@@ -57,6 +57,7 @@ def handle_webhook(payload: bytes, sig_header: str) -> dict:
         email = session.get("customer_email") or session.get("customer_details", {}).get("email", "unknown@example.com")
         license_key = session.get("client_reference_id")
 
+
         if license_key:
             from database import get_db
             try:
