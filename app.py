@@ -606,9 +606,17 @@ async def main():
         <script src="https://cdn.jsdelivr.net/npm/libheif-js@1.17.1/libheif-bundle.js"></script>
         <script>
         // HEIC→JPEG変換（libheif-js使用）
+        let _libheifModule = null;
+        async function getLibheifModule() {
+            if (!_libheifModule) {
+                _libheifModule = await libheif(); // Emscriptenファクトリをawaitで初期化
+            }
+            return _libheifModule;
+        }
         async function convertHEICWithLibheif(file) {
+            const lib = await getLibheifModule();
             const buffer = await file.arrayBuffer();
-            const decoder = new libheif.HeifDecoder();
+            const decoder = new lib.HeifDecoder();
             const data = decoder.decode(new Uint8Array(buffer));
             if (!data || data.length === 0) throw new Error('HEICデコード失敗');
             const image = data[0];
