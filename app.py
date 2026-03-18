@@ -601,8 +601,34 @@ async def main():
                 .upload-area { padding: 24px 20px; }
             }
         </style>
-        <!-- HEIC/HEIF JS decoder (fallback for Windows Chrome etc.) -->
+        <!-- HEIC/HEIF JS decoder (heic2any first, libheif-js as fallback) -->
         <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/libheif-js@1.17.1/libheif-bundle.js"></script>
+        <script>
+        // HEIC→JPEG変換（libheif-js使用）
+        async function convertHEICWithLibheif(file) {
+            const buffer = await file.arrayBuffer();
+            const decoder = new libheif.HeifDecoder();
+            const data = decoder.decode(new Uint8Array(buffer));
+            if (!data || data.length === 0) throw new Error('HEICデコード失敗');
+            const image = data[0];
+            const width = image.get_width();
+            const height = image.get_height();
+            const pixelData = await new Promise((resolve, reject) => {
+                const rgba = new Uint8ClampedArray(width * height * 4);
+                image.display({ data: rgba, width, height }, (result) => {
+                    if (!result) reject(new Error('display failed'));
+                    else resolve(result.data);
+                });
+            });
+            const cvs = document.createElement('canvas');
+            cvs.width = width; cvs.height = height;
+            cvs.getContext('2d').putImageData(new ImageData(pixelData, width, height), 0, 0);
+            return new Promise((resolve, reject) =>
+                cvs.toBlob(b => b ? resolve(b) : reject(new Error('toBlob失敗')), 'image/jpeg', 0.92)
+            );
+        }
+        </script>
     </head>
     <body>
         <!-- Language Switcher -->
@@ -1184,15 +1210,35 @@ async def main():
                 const nm = file.name.toLowerCase();
                 const isHeic = nm.endsWith('.heic') || nm.endsWith('.heif')
                     || file.type === 'image/heic' || file.type === 'image/heif';
-                if (isHeic && typeof heic2any === 'function') {
-                    try {
-                        const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
-                        const convertedBlob = Array.isArray(converted) ? converted[0] : converted;
-                        file = new File([convertedBlob], file.name.replace(/\.heic$/i, '.jpg').replace(/\.heif$/i, '.jpg'), { type: 'image/jpeg' });
-                    } catch (e) {
-                        // JS変換失敗 → サーバー側(Python/pillow-heif)で変換するのでそのまま送信
-                        console.warn('HEIC JS変換失敗、サーバー側で処理します:', e.message || e);
+                if (isHeic) {
+                    let convertedBlob = null;
+
+                    // 1st: heic2any
+                    if (typeof heic2any === 'function') {
+                        try {
+                            const result = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
+                            convertedBlob = Array.isArray(result) ? result[0] : result;
+                        } catch (e) {
+                            console.warn('heic2any失敗、libheif-jsで再試行:', e.message || e);
+                        }
                     }
+
+                    // 2nd: libheif-js
+                    if (!convertedBlob && typeof libheif !== 'undefined') {
+                        try {
+                            convertedBlob = await convertHEICWithLibheif(file);
+                        } catch (e) {
+                            console.warn('libheif-js失敗、サーバー側で処理します:', e.message || e);
+                        }
+                    }
+
+                    if (convertedBlob) {
+                        // JS変換成功 → JPEGとしてセット（プレビュー・送信どちらもOK）
+                        file = new File([convertedBlob],
+                            file.name.replace(/\.heic$/i, '.jpg').replace(/\.heif$/i, '.jpg'),
+                            { type: 'image/jpeg' });
+                    }
+                    // 変換失敗でもそのまま送信 → Pythonのpillow-heifが処理する
                 }
                 currentFile = file;
                 const url = URL.createObjectURL(file);
